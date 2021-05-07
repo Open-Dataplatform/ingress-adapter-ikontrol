@@ -18,7 +18,6 @@ config:
     [iKontrol API]
     api_url = <api_url>
     api_version = <api_version>
-    api_key = <api_key>
   log.conf: |
     [loggers]
     keys=root

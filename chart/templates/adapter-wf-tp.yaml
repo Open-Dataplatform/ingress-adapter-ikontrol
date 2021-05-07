@@ -27,6 +27,7 @@ spec:
               client_id = {{ .Data.data.client_id }}
               client_secret = {{ .Data.data.secret }}
               [iKontrol Authorization]
+              api_key = {{ .Data.data.api_key }}
               username = {{ .Data.data.username }}
               password = {{ .Data.data.password }}
               {{- end -}}`}}

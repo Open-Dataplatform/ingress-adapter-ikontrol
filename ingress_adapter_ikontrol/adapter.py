@@ -111,6 +111,7 @@ def main():
     tenant_id = credentials_config['Authorization']['tenant_id']
     client_id = credentials_config['Authorization']['client_id']
     client_secret = credentials_config['Authorization']['client_secret']
+    api_key = credentials_config['iKontrol Authorization']['api_key']
     username = credentials_config['iKontrol Authorization']['username']
     password = credentials_config['iKontrol Authorization']['password']
 
@@ -118,7 +119,6 @@ def main():
     dataset_guid = config['Datasets']['source']
     api_url = config['iKontrol API']['api_url']
     api_version = config['iKontrol API']['api_version']
-    api_key = config['iKontrol API']['api_key']
 
     client = IKontrolClient(api_url, api_version, api_key, username, password)
     adapter = IKontrolAdapter(ingress_url, tenant_id, client_id, client_secret, dataset_guid, client)
