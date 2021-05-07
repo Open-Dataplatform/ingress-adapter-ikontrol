@@ -26,7 +26,6 @@ source = <source_guid>
 [iKontrol API]
 api_url = https://publicapi.ikontrol.dk
 api_version = <api_version>
-api_key = <api_key>
 ```
 
 The configuration file, `credentials.ini`, must be placed in the root of the project or in the location `/vault/secrets/credentials.ini`.
@@ -38,6 +37,7 @@ client_id = <client_id>
 client_secret = <client_secret>
 
 [iKontrol Authorization]
+api_key = <api_key>
 username = <username>
 password = <password>
 ```
