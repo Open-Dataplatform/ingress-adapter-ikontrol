@@ -1,0 +1,44 @@
+appName: osiris-ingress-adapter-ikontrol
+environment: test
+image:
+  repository: transform-ingress2event-time
+  tag: latest
+schedule: "0 1 * * *"
+config:
+  conf.ini: |
+    [Logging]
+    configuration_file = log.conf
+
+    [Azure Storage]
+    ingress_url = <ingress_url>
+
+    [Datasets]
+    source = <source>
+
+    [iKontrol API]
+    api_url = <api_url>
+    api_version = <api_version>
+    api_key = <api_key>
+  log.conf: |
+    [loggers]
+    keys=root
+    [handlers]
+    keys=consoleHandler,fileHandler
+    [formatters]
+    keys=fileFormatter,consoleFormatter
+    [logger_root]
+    level=DEBUG
+    handlers=consoleHandler
+    [handler_consoleHandler]
+    class=StreamHandler
+    formatter=consoleFormatter
+    args=(sys.stdout,)
+    [handler_fileHandler]
+    class=FileHandler
+    formatter=fileFormatter
+    args=('logfile.log',)
+    [formatter_fileFormatter]
+    format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+    datefmt=
+    [formatter_consoleFormatter]
+    format=%(levelname)s: %(name)s - %(message)s
