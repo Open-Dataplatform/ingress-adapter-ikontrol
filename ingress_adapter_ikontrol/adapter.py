@@ -69,11 +69,10 @@ class IKontrolAdapter(IngressAdapter):
     Implements the retrieve_data method.
     """
     # pylint: disable=too-many-arguments
-    def __init__(self, ingress_url, tenant_id, client_id, client_secret, dataset_guid,
-                 api_url, api_version, api_key, username, password):
+    def __init__(self, ingress_url, tenant_id, client_id, client_secret, dataset_guid, client):
         super().__init__(ingress_url, tenant_id, client_id, client_secret, dataset_guid)
 
-        self.client = IKontrolClient(api_url, api_version, api_key, username, password)
+        self.client = client
         self.project_ids = self.client.get_all_project_ids()
         self.current_index = 0
         self.current_projectid = None
@@ -82,12 +81,16 @@ class IKontrolAdapter(IngressAdapter):
         """
         Retrieves the data from iKontrol and returns it.
         """
+        if self.current_index >= len(self.project_ids):
+            logger.error('Current index out of range of project ids')
+            raise IndexError('Current index out of range')
+
         self.current_projectid = self.project_ids[self.current_index]
-        logger.debug('Recieving ZIP of ProjectId: %s', self.current_projectid)
+        logger.debug('Receiving ZIP of ProjectId: %s', self.current_projectid)
 
         self.current_index += 1
         project_zip = self.client.get_project_zip(self.current_projectid)
-        logger.debug('Successfully recieved ZIP of ProjectId: %s', self.current_projectid)
+        logger.debug('Successfully received ZIP of ProjectId: %s', self.current_projectid)
 
         return project_zip
 
@@ -117,8 +120,8 @@ def main():
     api_version = config['iKontrol API']['api_version']
     api_key = config['iKontrol API']['api_key']
 
-    adapter = IKontrolAdapter(ingress_url, tenant_id, client_id, client_secret, dataset_guid,
-                              api_url, api_version, api_key, username, password)
+    client = IKontrolClient(api_url, api_version, api_key, username, password)
+    adapter = IKontrolAdapter(ingress_url, tenant_id, client_id, client_secret, dataset_guid, client)
 
     # print(adapter.retrieve_data())
     logger.info('Running the iKontrol Ingress Adapter')
