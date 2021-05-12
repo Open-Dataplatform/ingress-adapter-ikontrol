@@ -26,14 +26,27 @@ class IKontrolClient:
         self.api_key = api_key
         self.username = username
         self.password = password
+        self.tasks = self.__get_all_tasks()
 
     def __get_all_projects(self):
         """
-        Returns all the details of a project.
+        Returns all the details of all projects.
         """
         response = requests.get(
             url=f'{self.api_url}/{self.api_version}/{self.api_key}/Project/GetAll',
             auth=HTTPBasicAuth(self.username, self.password)
+        )
+
+        return json.loads(response.content)
+
+    def __get_project(self, project_id: int):
+        """
+        Returns all the details of a project.
+        """
+        response = requests.get(
+            url=f'{self.api_url}/{self.api_version}/{self.api_key}/Project/Get',
+            auth=HTTPBasicAuth(self.username, self.password),
+            params={'id': project_id}
         )
 
         return json.loads(response.content)
@@ -50,6 +63,41 @@ class IKontrolClient:
 
         return response.content
 
+    def __get_project_schemes(self, project_id: int, from_date='1970-01-01'):
+        """
+        Returns every scheme in a project.
+        """
+        response = requests.get(
+            url=f'{self.api_url}/{self.api_version}/{self.api_key}/Scheme/GetByProjectId',
+            auth=HTTPBasicAuth(self.username, self.password),
+            params={'projectId': project_id, 'from': from_date}
+        )
+
+        return json.loads(response.content)
+
+    def __get_tasks(self, task_type_id: int, from_date='1970-01-01'):
+        """
+        Returns every task with the given task type id.
+        """
+        response = requests.get(
+            url=f'{self.api_url}/{self.api_version}/{self.api_key}/Task/Get',
+            auth=HTTPBasicAuth(self.username, self.password),
+            params={'taskTypeId': task_type_id, 'from': from_date}
+        )
+
+        return json.loads(response.content)
+
+    def __get_menuitems(self):
+        """
+        Returns all active menuitems.
+        """
+        response = requests.get(
+            url=f'{self.api_url}/{self.api_version}/{self.api_key}/MenuItem/GetAll',
+            auth=HTTPBasicAuth(self.username, self.password),
+        )
+
+        return json.loads(response.content)
+
     def get_all_project_ids(self) -> list:
         """
         Returns a list of all project IDs.
@@ -61,6 +109,56 @@ class IKontrolClient:
             project_ids.append(project['Id'])
 
         return project_ids
+
+    def __get_all_tasktype_ids(self) -> list:
+        """
+        Returns a list of all tasktype IDs.
+        """
+        all_menuitems = self.__get_menuitems()
+        task_type_ids = []
+
+        for menuitem in all_menuitems:
+            if ('MasterTypeId', 4) in menuitem.items():
+                task_type_ids.append(menuitem['Id'])
+
+        return task_type_ids
+
+    def __get_all_tasks(self):
+        task_type_ids = self.__get_all_tasktype_ids()
+        tasks = []
+
+        for task_type_id in task_type_ids:
+            tasks.extend(self.__get_tasks(task_type_id))
+
+        return tasks
+
+    def __get_all_project_tasks(self, project_id: int) -> list:
+        """
+        Returns a list of all tasks in the given project ID.
+        """
+        project_tasks = []
+
+        for task in self.tasks:
+            if ('ProjectId', project_id) in task.items():
+                project_tasks.append(task)
+
+        return project_tasks
+
+    def get_project_schemes_and_tasks(self, project_id: int) -> bytes:
+        """
+        Returns project details, schemes, and tasks in the given project ID.
+        """
+        project = self.__get_project(project_id)
+        schemes = self.__get_project_schemes(project_id)
+        tasks = self.__get_all_project_tasks(project_id)
+
+        schemes_and_tasks = {
+            'project': project,
+            'schemes': schemes,
+            'tasks': tasks
+        }
+
+        return json.dumps(schemes_and_tasks).encode('UTF-8')
 
 
 class IKontrolAdapter(IngressAdapter):
@@ -86,16 +184,16 @@ class IKontrolAdapter(IngressAdapter):
             raise IndexError('Current index out of range')
 
         self.current_projectid = self.project_ids[self.current_index]
-        logger.debug('Receiving ZIP of ProjectId: %s', self.current_projectid)
-
         self.current_index += 1
-        project_zip = self.client.get_project_zip(self.current_projectid)
-        logger.debug('Successfully received ZIP of ProjectId: %s', self.current_projectid)
 
-        return project_zip
+        logger.debug('Receiving data of ProjectId: %s', self.current_projectid)
+        project_schemes_and_tasks = self.client.get_project_schemes_and_tasks(self.current_projectid)
+        logger.debug('Successfully received data of ProjectId: %s', self.current_projectid)
+
+        return project_schemes_and_tasks
 
     def get_filename(self) -> str:
-        return f'{self.current_projectid}.zip'
+        return f'{self.current_projectid}.json'
 
     def has_more_projects(self) -> bool:
         """
@@ -125,6 +223,7 @@ def main():
 
     # print(adapter.retrieve_data())
     logger.info('Running the iKontrol Ingress Adapter')
+
     while adapter.has_more_projects():
         adapter.upload_data()
 
