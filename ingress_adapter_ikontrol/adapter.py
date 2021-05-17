@@ -152,13 +152,13 @@ class IKontrolClient:
         schemes = self.__get_project_schemes(project_id)
         tasks = self.__get_all_project_tasks(project_id)
 
-        schemes_and_tasks = {
+        data = {
             'project': project,
             'schemes': schemes,
             'tasks': tasks
         }
 
-        return json.dumps(schemes_and_tasks).encode('UTF-8')
+        return json.dumps(data).encode('UTF-8')
 
 
 class IKontrolAdapter(IngressAdapter):
