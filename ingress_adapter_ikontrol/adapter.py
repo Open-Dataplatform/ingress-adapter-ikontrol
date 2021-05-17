@@ -2,6 +2,11 @@
 iKontrol Adapter for Ingress.
 """
 import json
+import os
+import shutil
+import tempfile
+import zipfile
+
 import requests
 
 from requests.auth import HTTPBasicAuth
@@ -98,6 +103,18 @@ class IKontrolClient:
 
         return json.loads(response.content)
 
+    def __get_scheme_pdf(self, response_id):
+        """
+        Returns scheme PDF
+        """
+        response = requests.get(
+            url=f'{self.api_url}/{self.api_version}/{self.api_key}/Scheme/DownloadSchemeResponse',
+            auth=HTTPBasicAuth(self.username, self.password),
+            params={'responseId': response_id}
+        )
+
+        return response.content
+
     def get_all_project_ids(self) -> list:
         """
         Returns a list of all project IDs.
@@ -144,7 +161,20 @@ class IKontrolClient:
 
         return project_tasks
 
-    def get_project_schemes_and_tasks(self, project_id: int) -> bytes:
+    def __get_all_scheme_pdfs(self, project_id: int) -> list:
+        """
+        Returns a list of all scheme responses in the given project ID.
+        """
+        schemes = self.__get_project_schemes(project_id)
+        pdf_responses = []
+
+        for scheme in schemes:
+            if 'Id' in scheme:
+                pdf_responses.append((scheme['Id'], self.__get_scheme_pdf(scheme['Id'])))
+
+        return pdf_responses
+
+    def __get_project_schemes_and_tasks(self, project_id: int) -> bytes:
         """
         Returns project details, schemes, and tasks in the given project ID.
         """
@@ -159,6 +189,38 @@ class IKontrolClient:
         }
 
         return json.dumps(data).encode('UTF-8')
+
+    def create_zip_file(self, project_id):
+        """
+        Returns ZIP containing project details, schemes, and tasks in JSON and scheme PDFs from the given project ID.
+        """
+        work_dir = "."
+        zip_path = os.path.join(work_dir, f'{project_id}.zip')
+        zip_dir = tempfile.mkdtemp()
+
+        try:
+            with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zfd:
+                for response_id, scheme_pdf in self.__get_all_scheme_pdfs(project_id):
+                    file_path = os.path.join(zip_dir, f'Schemeresponse-{response_id}.pdf')
+
+                    with open(file_path, 'bw') as file:
+                        file.write(scheme_pdf)
+
+                    zfd.write(file_path, f'Schemeresponse-{response_id}.pdf')
+
+                file_path = os.path.join(zip_dir, f'{project_id}.json')
+
+                with open(file_path, 'bw') as file:
+                    file.write(self.__get_project_schemes_and_tasks(project_id))
+
+                zfd.write(file_path, f'{project_id}.json')
+
+            with open(zip_path, 'rb') as zip_file:
+                return zip_file.read()
+
+        finally:
+            shutil.rmtree(zip_dir)
+            os.remove(zip_path)
 
 
 class IKontrolAdapter(IngressAdapter):
@@ -187,13 +249,13 @@ class IKontrolAdapter(IngressAdapter):
         self.current_index += 1
 
         logger.debug('Receiving data of ProjectId: %s', self.current_projectid)
-        project_schemes_and_tasks = self.client.get_project_schemes_and_tasks(self.current_projectid)
+        project_zip = self.client.create_zip_file(self.current_projectid)
         logger.debug('Successfully received data of ProjectId: %s', self.current_projectid)
 
-        return project_schemes_and_tasks
+        return project_zip
 
     def get_filename(self) -> str:
-        return f'{self.current_projectid}.json'
+        return f'{self.current_projectid}.zip'
 
     def has_more_projects(self) -> bool:
         """
@@ -221,9 +283,8 @@ def main():
     client = IKontrolClient(api_url, api_version, api_key, username, password)
     adapter = IKontrolAdapter(ingress_url, tenant_id, client_id, client_secret, dataset_guid, client)
 
-    # print(adapter.retrieve_data())
+    # adapter.retrieve_data()
     logger.info('Running the iKontrol Ingress Adapter')
-
     while adapter.has_more_projects():
         adapter.upload_data()
 
