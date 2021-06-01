@@ -1,7 +1,7 @@
 appName: osiris-ingress-adapter-ikontrol
 environment: test
 image:
-  repository: transform-ingress2event-time
+  repository: <image-repository>
   tag: latest
 schedule: "0 1 * * *"
 config:
