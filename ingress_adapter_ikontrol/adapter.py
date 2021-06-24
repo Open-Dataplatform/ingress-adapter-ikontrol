@@ -134,6 +134,7 @@ class IKontrolClient:
         all_menuitems = self.__get_menuitems()
         task_type_ids = []
 
+        # The task menu item type id 4, so all task ids are returned
         for menuitem in all_menuitems:
             if ('MasterTypeId', 4) in menuitem.items():
                 task_type_ids.append(menuitem['Id'])
@@ -190,6 +191,22 @@ class IKontrolClient:
 
         return json.dumps(data).encode('UTF-8')
 
+    def write_to_zip(self, zfd,  zip_dir: str, project_id: int):
+        for response_id, scheme_pdf in self.__get_all_scheme_pdfs(project_id):
+            file_path = os.path.join(zip_dir, f'Schemeresponse-{response_id}.pdf')
+
+            with open(file_path, 'bw') as file:
+                file.write(scheme_pdf)
+
+            zfd.write(file_path, f'Schemeresponse-{response_id}.pdf')
+
+        file_path = os.path.join(zip_dir, f'{project_id}.json')
+
+        with open(file_path, 'bw') as file:
+            file.write(self.__get_project_schemes_and_tasks(project_id))
+
+        zfd.write(file_path, f'{project_id}.json')
+
     def create_zip_file(self, project_id):
         """
         Returns ZIP containing project details, schemes, and tasks in JSON and scheme PDFs from the given project ID.
@@ -200,20 +217,7 @@ class IKontrolClient:
 
         try:
             with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED) as zfd:
-                for response_id, scheme_pdf in self.__get_all_scheme_pdfs(project_id):
-                    file_path = os.path.join(zip_dir, f'Schemeresponse-{response_id}.pdf')
-
-                    with open(file_path, 'bw') as file:
-                        file.write(scheme_pdf)
-
-                    zfd.write(file_path, f'Schemeresponse-{response_id}.pdf')
-
-                file_path = os.path.join(zip_dir, f'{project_id}.json')
-
-                with open(file_path, 'bw') as file:
-                    file.write(self.__get_project_schemes_and_tasks(project_id))
-
-                zfd.write(file_path, f'{project_id}.json')
+                self.write_to_zip(zfd, zip_dir, project_id)
 
             with open(zip_path, 'rb') as zip_file:
                 return zip_file.read()
