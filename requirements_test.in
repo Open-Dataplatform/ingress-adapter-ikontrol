@@ -1,0 +1,7 @@
+osiris-sdk
+pytest
+coverage
+pytest-cov
+pytest-mock
+requests
+pylint

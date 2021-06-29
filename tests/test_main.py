@@ -8,10 +8,10 @@ def get_ikontrolclient(mocker):
     """
     Make an instance of the class
     """
-    with mocker.patch('ingress_adapter_ikontrol.adapter.IKontrolClient._IKontrolClient__get_all_tasks'):
-        client = IKontrolClient(' http://url', '1', 'key', 'user', 'pass')
+    mocker.patch('ingress_adapter_ikontrol.adapter.IKontrolClient._IKontrolClient__get_all_tasks')
+    client = IKontrolClient(' http://url', '1', 'key', 'user', 'pass')
 
-        return client
+    return client
 
 
 def test_get_all_project_ids(mocker):
