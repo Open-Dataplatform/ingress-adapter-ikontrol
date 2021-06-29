@@ -191,7 +191,10 @@ class IKontrolClient:
 
         return json.dumps(data).encode('UTF-8')
 
-    def write_to_zip(self, zfd,  zip_dir: str, project_id: int):
+    def write_to_zip(self, zfd, zip_dir: str, project_id: int):
+        """
+        Writes JSON file and PDF(s) to ZIP-file.
+        """
         for response_id, scheme_pdf in self.__get_all_scheme_pdfs(project_id):
             file_path = os.path.join(zip_dir, f'Schemeresponse-{response_id}.pdf')
 
@@ -259,6 +262,9 @@ class IKontrolAdapter(IngressAdapter):
         return project_zip
 
     def get_filename(self) -> str:
+        """
+        Get the name of a project ZIP
+        """
         return f'{self.current_projectid}.zip'
 
     def has_more_projects(self) -> bool:
