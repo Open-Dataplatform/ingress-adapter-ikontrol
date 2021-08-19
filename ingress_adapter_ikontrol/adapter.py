@@ -10,6 +10,7 @@ import zipfile
 import requests
 
 from requests.auth import HTTPBasicAuth
+from osiris.core.azure_client_authorization import ClientAuthorization
 from osiris.adapters.ingress_adapter import IngressAdapter
 from osiris.core.configuration import Configuration, ConfigurationWithCredentials
 
@@ -237,7 +238,8 @@ class IKontrolAdapter(IngressAdapter):
     """
     # pylint: disable=too-many-arguments
     def __init__(self, ingress_url, tenant_id, client_id, client_secret, dataset_guid, client):
-        super().__init__(ingress_url, tenant_id, client_id, client_secret, dataset_guid)
+        client_auth = ClientAuthorization(tenant_id, client_id, client_secret)
+        super().__init__(client_auth=client_auth, ingress_url=ingress_url, dataset_guid=dataset_guid)
 
         self.client = client
         self.project_ids = self.client.get_all_project_ids()
