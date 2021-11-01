@@ -6,19 +6,18 @@ import os
 import shutil
 import tempfile
 import zipfile
+import logging
+import logging.config
+from configparser import ConfigParser
 
 import requests
 
 from requests.auth import HTTPBasicAuth
 from osiris.core.azure_client_authorization import ClientAuthorization
 from osiris.adapters.ingress_adapter import IngressAdapter
-from osiris.core.configuration import Configuration, ConfigurationWithCredentials
 
-configuration = Configuration(__file__)
-configuration_credentials = ConfigurationWithCredentials(__file__)
-credentials_config = configuration_credentials.get_credentials_config()
-config = configuration.get_config()
-logger = configuration.get_logger()
+
+logger = logging.getLogger(__file__)
 
 
 class IKontrolClient:
@@ -251,7 +250,6 @@ class IKontrolAdapter(IngressAdapter):
         Retrieves the data from iKontrol and returns it.
         """
         if self.current_index >= len(self.project_ids):
-            logger.error('Current index out of range of project ids')
             raise IndexError('Current index out of range')
 
         self.current_projectid = self.project_ids[self.current_index]
@@ -275,11 +273,25 @@ class IKontrolAdapter(IngressAdapter):
         """
         return self.current_index < len(self.project_ids)
 
+    def get_event_time(self):
+        pass
+
+    def save_state(self):
+        pass
+
 
 def main():
     """
     Initialize class and upload ZIP file.
     """
+    config = ConfigParser()
+    config.read(['conf.ini', '/etc/osiris/conf.ini'])
+    credentials_config = ConfigParser()
+    credentials_config.read(['credentials.ini', '/vault/secrets/credentials.ini'])
+
+    logging.config.fileConfig(fname=config['Logging']['configuration_file'],  # type: ignore
+                              disable_existing_loggers=False)
+
     tenant_id = credentials_config['Authorization']['tenant_id']
     client_id = credentials_config['Authorization']['client_id']
     client_secret = credentials_config['Authorization']['client_secret']
