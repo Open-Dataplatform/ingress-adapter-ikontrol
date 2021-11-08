@@ -1,3 +1,9 @@
+[![Pylint](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/pylint.yml/badge.svg)](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/pylint.yml)
+[![Bandit](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/bandit.yml/badge.svg)](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/bandit.yml)
+[![Flake8](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/flake8.yml/badge.svg)](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/flake8.yml)
+[![Mypy](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/mypy.yml/badge.svg)](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/mypy.yml)
+[![Pytest](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/pytest.yml/badge.svg)](https://github.com/Open-Dataplatform/ingress-adapter-ikontrol/actions/workflows/pytest.yml)
+
 # ingress-adapter-ikontrol
 
 ## Introduction
@@ -9,9 +15,9 @@ $ python -m ingress_adapter_ikontrol.adapter
 ```
 
 ## Configuration
-The application needs two configuration files `conf.ini` (see `conf.example.ini`) and `credentials.ini` (see `credentials.example.ini`). 
-The configuration file, `conf.ini`, must be placed in the root of the project or in the locations `/etc/osiris/conf.ini` or 
-`/etc/ingress-adapter-ikontrol-conf.ini`. 
+The application needs two configuration files `conf.ini` (see `conf.example.ini`) and `credentials.ini` (see `credentials.example.ini`).
+The configuration file, `conf.ini`, must be placed in the root of the project or in the locations `/etc/osiris/conf.ini` or
+`/etc/ingress-adapter-ikontrol-conf.ini`.
 
 ```
 [Logging]
@@ -43,7 +49,7 @@ password = <password>
 ```
 
 ### Logging
-Logging can be controlled by defining handlers and formatters using [Logging Configuration](https://docs.python.org/3/library/logging.config.html) and specifically the [config fileformat](https://docs.python.org/3/library/logging.config.html#logging-config-fileformat). 
+Logging can be controlled by defining handlers and formatters using [Logging Configuration](https://docs.python.org/3/library/logging.config.html) and specifically the [config fileformat](https://docs.python.org/3/library/logging.config.html#logging-config-fileformat).
 The location of the log configuration file (`Logging.configuration_file`) must be defined in the configuration file of the application as mentioned above.
 
 Here is an example configuration:
@@ -80,7 +86,7 @@ format=%(levelname)s: %(name)s - %(message)s
 ```
 
 #### Grant access to the dataset
-The application must be granted read access to the ingress dataset and write-access to the egress dataset on 
+The application must be granted read access to the ingress dataset and write-access to the egress dataset on
 [the Data Platform](https://dataplatform.energinet.dk/).
 
 Add the application you created earlier, using the `<YOUR APP NAME>` name, to the read- and write-access lists.
